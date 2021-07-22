@@ -1,25 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
 
-function App() {
+const Anecdote = ({ anecdote, votesAmt }) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <div>{anecdote}</div>
+      <div>has {votesAmt} votes</div>
+    </>
   );
-}
+};
+
+const App = ({ anecdotes }) => {
+  const [selected, setSelected] = useState(0);
+  const [votes, setVotes] = useState({
+    0: 0,
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+  });
+
+  const handleNextAnecdote = () => {
+    let index = getRandomIndex();
+    setSelected(index);
+  };
+  console.log(anecdotes[selected]);
+
+  const addVote = () => {
+    setVotes({
+      ...votes,
+      [selected]: votes[selected] + 1,
+    });
+  };
+
+  const totalAnecdotes = anecdotes.length;
+  const getRandomIndex = () => Math.floor(Math.random() * totalAnecdotes);
+
+  console.log(votes);
+
+  return (
+    <>
+      <Anecdote
+        anecdote={anecdotes[selected]}
+        selected={selected}
+        votesAmt={votes[selected]}
+      />
+      <button onClick={handleNextAnecdote}>next anecdote</button>
+      <button onClick={addVote}>vote</button>
+    </>
+  );
+};
 
 export default App;
