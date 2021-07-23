@@ -45,7 +45,6 @@ const App = () => {
       [selected]: votes[selected] + 1,
     });
   };
-
   return (
     <>
       <Anecdote
