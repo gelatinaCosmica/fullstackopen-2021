@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Filter from "./components/filter";
 import PersonForm from "./components/personForm.component";
-import PersonList from "./components/personList.component";
-import axios from "axios";
+import Persons from "./components/persons.component";
 
-const Axios = require("axios").default;
+import personService from "./services/names/personsIndex";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -13,41 +12,65 @@ const App = () => {
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    console.log("effect");
-    Axios.get("http://localhost:3001/persons").then((response) => {
-      console.log("promise fulfilled");
-      setPersons(response.data);
+    personService.getAllNames().then((initialNames) => {
+      setPersons(initialNames);
     });
   }, []);
-  // console.log("render", persons.length, "persons");
 
   const addName = (event) => {
     event.preventDefault();
+
     const nameObject = {
-      id: persons.length + 1,
       name: newName,
       number: newNumber,
     };
 
-    persons.find((person) => {
-      return person.name === newName;
-    })
-      ? alert(`${newName} is already added to phonebook`)
-      : setPersons(persons.concat(nameObject));
-    setNewName("");
-    setNewNumber("");
+    if (persons.map((person) => person.name).includes(newName)) {
+      const indexSameNamePerson = persons
+        .map((person) => person.name)
+        .indexOf(newName);
+      const id = persons[indexSameNamePerson].id;
+      const person = persons.find((index) => index.id === id);
+      const changedNumber = { ...person, number: newNumber };
+      if (
+        window.confirm(
+          `${person.name} is already added the phonebook, replace the old number with a new one?`
+        )
+      ) {
+        personService
+          .updateName(id, changedNumber)
+          .then(() => {
+            personService.getAllNames().then((initialNames) => {
+              setPersons(initialNames);
+              setNewName("");
+              setNewNumber("");
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    } else if (persons.map((person) => person.number).includes(newNumber)) {
+      alert(`${newNumber} is already added to the phonebook`);
+      setNewName("");
+      setNewNumber("");
+    } else {
+      personService.createName(nameObject).then((returnedPerson) => {
+        setPersons([...persons, returnedPerson]);
+        setNewName("");
+        setNewNumber("");
+      });
+    }
   };
 
-  const handleNameChange = (event) => {
-    setNewName(event.target.value);
-  };
+  const handleNameChange = (event) => setNewName(event.target.value);
+  const handleNumberChange = (event) => setNewNumber(event.target.value);
+  const handleFilterChange = (event) => setFilter(event.target.value);
 
-  const handleNumberChange = (event) => {
-    setNewNumber(event.target.value);
-  };
-
-  const handleFilterChange = (event) => {
-    setFilter(event.target.value);
+  const handleDelete = (id) => {
+    personService
+      .deleteName(id)
+      .then(() => setPersons(persons.filter((person) => id !== person.id)));
   };
 
   const results = persons.filter((person) =>
@@ -65,7 +88,7 @@ const App = () => {
         newName={newName}
         newNumber={newNumber}
       />
-      <PersonList list={results} filter={filter} />
+      <Persons list={results} handleDelete={handleDelete} />
     </>
   );
 };
