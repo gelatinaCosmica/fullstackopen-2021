@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Filter from "./components/filter";
 import PersonForm from "./components/personForm.component";
 import Persons from "./components/persons.component";
+import Notification from "./components/notification.component";
 
 import personService from "./services/names/personsIndex";
 
@@ -10,6 +11,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
     personService.getAllNames().then((initialNames) => {
@@ -32,6 +35,7 @@ const App = () => {
       const id = persons[indexSameNamePerson].id;
       const person = persons.find((index) => index.id === id);
       const changedNumber = { ...person, number: newNumber };
+
       if (
         window.confirm(
           `${person.name} is already added the phonebook, replace the old number with a new one?`
@@ -47,7 +51,12 @@ const App = () => {
             });
           })
           .catch((error) => {
-            console.log(error);
+            setErrorMessage(
+              `Contact '${person.name}' was already removed from the server`
+            );
+            setTimeout(() => {
+              setErrorMessage(null);
+            }, 5000);
           });
       }
     } else if (persons.map((person) => person.number).includes(newNumber)) {
@@ -59,6 +68,10 @@ const App = () => {
         setPersons([...persons, returnedPerson]);
         setNewName("");
         setNewNumber("");
+        setSuccessMessage(`Added ${nameObject.name}`);
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 5000);
       });
     }
   };
@@ -80,6 +93,10 @@ const App = () => {
   return (
     <>
       <h2>Phonebook</h2>
+      <Notification
+        errorMessage={errorMessage}
+        successMessage={successMessage}
+      />
       <Filter handleFilterChange={handleFilterChange} />
       <PersonForm
         handleNameChange={handleNameChange}
